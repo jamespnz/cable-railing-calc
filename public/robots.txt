@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cable-railing-calc.headsup-consulting.com/sitemap.xml
