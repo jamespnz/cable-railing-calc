@@ -32,6 +32,23 @@ describe('Cable Railing Deterministic Math Engine', () => {
     expect(result.totalEndPostTensionLbf).toBe(result.numberOfRuns * 300);
   });
 
+  it("calculates metric equivalents correctly for NZBC 1000mm rail height", () => {
+    const result = calculateCableSystem({
+      railHeightInches: 39.37,
+      runSpanFeet: 20,
+      postSpacingInches: 36,
+      cableDiameterInches: 0.125,
+    });
+
+    // Check that metric conversions exist and match expectations
+    expect(result.verticalCableSpacingMm).toBeGreaterThan(0);
+    expect(result.totalLinearCableMeters).toBeCloseTo(result.totalLinearCableFeet * 0.3048, 1);
+    expect(result.totalEndPostTensionKn).toBeGreaterThan(0);
+    expect(result.spacing.unitMetric).toBe("mm");
+    expect(result.totalCable.unitMetric).toBe("m");
+    expect(result.terminalLoad.unitMetric).toBe("kN");
+  });
+
   it('throws an explicit error when supplied non-positive geometry', () => {
     const invalidInputs: CableSystemInputs = {
       railHeightInches: 36,

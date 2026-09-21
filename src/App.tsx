@@ -18,6 +18,9 @@ export const App: React.FC = () => {
     }
   }, [inputs]);
 
+  // Derive metric mode when NZBC 1.0m (39.37") height is selected
+  const isMetric = inputs.railHeightInches === 39.37;
+
   const postCount = useMemo(() => {
     if (inputs.runSpanFeet <= 0 || inputs.postSpacingInches <= 0) return 2;
     return Math.floor((inputs.runSpanFeet * 12) / inputs.postSpacingInches) + 1;
@@ -42,7 +45,7 @@ export const App: React.FC = () => {
             Cable Railing Compliance & Tension Engine
           </h1>
           <p className="text-xs md:text-sm text-slate-400 mt-1">
-            IBC / IRC / NZBC 4-Inch Sphere Rule Compliance & Deterministic Load Estimator
+            IBC / IRC / NZBC 4-Inch (100mm) Sphere Rule Compliance & Deterministic Load Estimator
           </p>
         </div>
         <div className="text-xs font-mono px-3 py-1 bg-slate-900 border border-slate-800 rounded text-cyan-400 self-start md:self-auto">
@@ -103,7 +106,9 @@ export const App: React.FC = () => {
           <div>
             <div className="flex justify-between text-xs font-medium mb-1">
               <label htmlFor="runSpan" className="text-slate-400">Total Run Span</label>
-              <span className="font-mono text-cyan-400">{inputs.runSpanFeet} ft</span>
+              <span className="font-mono text-cyan-400">
+                {isMetric ? `${(inputs.runSpanFeet * 0.3048).toFixed(1)} m` : `${inputs.runSpanFeet} ft`}
+              </span>
             </div>
             <input
               id="runSpan"
@@ -121,7 +126,12 @@ export const App: React.FC = () => {
           <div>
             <div className="flex justify-between text-xs font-medium mb-1">
               <label htmlFor="postSpacing" className="text-slate-400">Post Spacing</label>
-              <span className="font-mono text-cyan-400">{inputs.postSpacingInches}" ({(inputs.postSpacingInches / 12).toFixed(1)} ft)</span>
+              <span className="font-mono text-cyan-400">
+                {isMetric 
+                  ? `${Math.round(inputs.postSpacingInches * 25.4)} mm (${(inputs.postSpacingInches * 0.0254).toFixed(2)} m)`
+                  : `${inputs.postSpacingInches}" (${(inputs.postSpacingInches / 12).toFixed(1)} ft)`
+                }
+              </span>
             </div>
             <input
               id="postSpacing"
@@ -134,7 +144,7 @@ export const App: React.FC = () => {
               className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
             />
             <p className="text-[10px] text-slate-500 mt-1">
-              Recommended: ≤ 48" to prevent excessive deflection under code load.
+              {isMetric ? 'Recommended: ≤ 1200 mm to prevent deflection under load.' : 'Recommended: ≤ 48" to prevent excessive deflection under code load.'}
             </p>
           </div>
 
@@ -153,7 +163,7 @@ export const App: React.FC = () => {
                     : 'bg-slate-850 border-slate-800 text-slate-400 hover:border-slate-700'
                 }`}
               >
-                1/8" (225 lbf/run)
+                {isMetric ? '3.2 mm (1.0 kN/run)' : '1/8" (225 lbf/run)'}
               </button>
               <button
                 type="button"
@@ -164,7 +174,7 @@ export const App: React.FC = () => {
                     : 'bg-slate-850 border-slate-800 text-slate-400 hover:border-slate-700'
                 }`}
               >
-                3/16" (300 lbf/run)
+                {isMetric ? '4.8 mm (1.33 kN/run)' : '3/16" (300 lbf/run)'}
               </button>
             </div>
           </div>
@@ -184,7 +194,9 @@ export const App: React.FC = () => {
                     ? 'bg-emerald-950/60 border-emerald-600 text-emerald-300'
                     : 'bg-rose-950/60 border-rose-600 text-rose-300'
                 }`}>
-                  {calculation.isSphereCompliant ? '4" SPHERE COMPLIANT' : 'NON-COMPLIANT SPACING'}
+                  {calculation.isSphereCompliant 
+                    ? (isMetric ? '100mm SPHERE COMPLIANT' : '4" SPHERE COMPLIANT') 
+                    : 'NON-COMPLIANT SPACING'}
                 </span>
               )}
             </div>
@@ -242,10 +254,13 @@ export const App: React.FC = () => {
 
                 {/* Dimension Labels */}
                 <text x="250" y="18" fill="#64748b" fontSize="10" textAnchor="middle" fontFamily="monospace">
-                  {inputs.runSpanFeet} ft Span ({inputs.postSpacingInches}" Spacing)
+                  {isMetric 
+                    ? `${(inputs.runSpanFeet * 0.3048).toFixed(1)} m Span (${Math.round(inputs.postSpacingInches * 25.4)} mm Spacing)`
+                    : `${inputs.runSpanFeet} ft Span (${inputs.postSpacingInches}" Spacing)`
+                  }
                 </text>
                 <text x="18" y="120" fill="#64748b" fontSize="10" textAnchor="middle" fontFamily="monospace" transform="rotate(-90 18 120)">
-                  {inputs.railHeightInches}" Height
+                  {isMetric ? '1000 mm Height' : `${inputs.railHeightInches}" Height`}
                 </text>
               </svg>
             </div>
@@ -261,13 +276,25 @@ export const App: React.FC = () => {
                     <span className="text-slate-500">Run Count:</span>
                     <span className="font-mono text-cyan-300 font-bold">{calculation.numberOfRuns} lines</span>
                   </div>
+
+                  {/* Vertical Spacing: Dual Unit Output */}
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">Vertical Spacing:</span>
-                    <span className="font-mono text-cyan-300 font-bold">{calculation.verticalCableSpacingInches.toFixed(2)}"</span>
+                    <span className="font-mono text-cyan-300 font-bold">
+                      {isMetric 
+                        ? `${calculation.spacing.metric} ${calculation.spacing.unitMetric} O.C.` 
+                        : `${calculation.spacing.imperial.toFixed(2)}" O.C.`}
+                    </span>
                   </div>
+
+                  {/* Total Cable: Dual Unit Output */}
                   <div className="flex justify-between text-xs">
-                    <span className="text-slate-500">Total Cable (incl. 10% waste):</span>
-                    <span className="font-mono text-cyan-300 font-bold">{calculation.totalLinearCableFeet} ft</span>
+                    <span className="text-slate-500">Total Cable (+10% waste):</span>
+                    <span className="font-mono text-cyan-300 font-bold">
+                      {isMetric 
+                        ? `${calculation.totalCable.metric} ${calculation.totalCable.unitMetric}` 
+                        : `${calculation.totalCable.imperial} ${calculation.totalCable.unitImperial}`}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -283,9 +310,15 @@ export const App: React.FC = () => {
                     <span className="text-slate-500">End Fitting Pairs:</span>
                     <span className="font-mono text-cyan-300 font-bold">{calculation.numberOfRuns} pairs</span>
                   </div>
+
+                  {/* Cumulative Terminal Load: Dual Unit Output */}
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">Cumulative Terminal Load:</span>
-                    <span className="font-mono text-amber-400 font-bold">{calculation.totalEndPostTensionLbf} lbf</span>
+                    <span className="font-mono text-amber-400 font-bold">
+                      {isMetric 
+                        ? `${calculation.terminalLoad.metric} ${calculation.terminalLoad.unitMetric}` 
+                        : `${calculation.terminalLoad.imperial} ${calculation.terminalLoad.unitImperial}`}
+                    </span>
                   </div>
                 </div>
               </div>
